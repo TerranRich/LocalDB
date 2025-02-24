@@ -65,7 +65,6 @@ class LocalDB {
 
 } // end class LocalDB
 
-
 /**
  * The `LocalStatement` class represents a statement to be executed on a local
  * database. Has properties for the database connection, table name, action to
@@ -89,6 +88,7 @@ class LocalStatement {
     this.action = null;
     this.values = null;
     this.conditions = [];
+    this.selectedFields = null; // stores selected fields
     this.sortField = null;
     // Set sort direction to ASC by default.
     this.sortDir = LocalStatement.SORT_ASC;
@@ -113,8 +113,13 @@ class LocalStatement {
    * 
    * @returns {object} Instance of LocalStatement object (method chaining)
    */
-  select() {
+  select(fields = ["*"]) {
     this.action = "select";
+    this.selectedFields = Array.isArray(fields)
+        ? fields     // already an array, pass as is
+        : typeof fields === "string"
+          ? [fields] // if single field passed as string, array-ify it
+          : ["*"];   // otherwise, default to SELECT * ...
     return this;
   }
 
@@ -261,6 +266,16 @@ class LocalStatement {
           this.resultOffset,
           this.resultLimit ? this.resultOffset + this.resultLimit : undefined
         );
+        
+        // Apply field selection
+        if (this.selectedFields && this.selectedFields[0] !== "*") {
+          results = results.map(item =>
+            this.selectedFields.reduce((obj, key) => {
+              if (key in item) obj[key] = item[key];
+              return obj;
+            }, {})
+          );
+        }
 
         resolve(results);
       };
@@ -295,9 +310,7 @@ class LocalStatement {
       return false;
     });
 
-    return isOr
-      ? results.some(Boolean)
-      : results.every(Boolean);
+    return isOr ? results.some(Boolean) : results.every(Boolean);
   }
 
   /**
