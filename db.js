@@ -63,7 +63,7 @@ class LocalDB {
     return new LocalStatement(this.db, table);
   }
 
-} // end class LocalDB
+}
 
 /**
  * The `LocalStatement` class represents a statement to be executed on a local
@@ -373,6 +373,4 @@ class LocalStatement {
     return this.sortDir === LocalStatement.SORT_ASC ? valA - valB : valB - valA;
   }
 
-} // end class LocalStatement
-
-export { LocalDB, LocalStatement };
+}
